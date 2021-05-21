@@ -16,7 +16,7 @@
 
 /** How large to make the internal buffer for parsing messages. Should be the size
  of the largest message we'll receive from the gps*/
-#define GPS_UART_BUFFER_SIZE 500
+#define GPS_UART_BUFFER_SIZE 1000
 
 // different commands to set the update rate from once a second (1 Hz) to 10 times a second (10Hz)
 // Note that these only control the rate at which the position is echoed, to actually speed up the
@@ -26,8 +26,8 @@ static const char* PMTK_SET_NMEA_UPDATE_5HZ = "$PMTK220,200*2C\r\n";
 static const char* PMTK_SET_NMEA_UPDATE_10HZ = "$PMTK220,100*2F\r\n";
 
 // Position fix update rate commands.
-static const char* PMTK_API_SET_FIX_CTL_1HZ = "$PMTK300,1000,0,0,0,0*1C\r\n";
-static const char* PMTK_API_SET_FIX_CTL_5HZ = "$PMTK300,200,0,0,0,0*2F\r\n";
+static const char* PMTK_API_SET_FIX_CTL_1HZ = "$PMTK100,1000,0,0,0,0*1C\r\n";
+static const char* PMTK_API_SET_FIX_CTL_5HZ = "$PMTK100,200,0,0,0,0*2F\r\n";
 // Can't fix position faster than 5 times a second!
 
 static const char* PMTK_SET_BAUD_57600 = "$PMTK251,57600*2C\r\n";
@@ -76,12 +76,13 @@ static bool new_vtg_data = false;
 static bool new_gga_data = false;
 static bool configured = false; //if the gps module has been initialized and configured
 
-static char gga_buffer[GPS_UART_BUFFER_SIZE]; //buffer for pasing gga (positional packets)
-static char vtg_buffer[GPS_UART_BUFFER_SIZE]; //buffer for parsing vtg packets (velocity packets)
-static char uart_buffer[GPS_UART_BUFFER_SIZE]; //buffer for parsing vtg packets (velocity packets)
+static uint8_t gga_buffer[GPS_UART_BUFFER_SIZE]; //buffer for pasing gga (positional packets)
+static uint8_t vtg_buffer[GPS_UART_BUFFER_SIZE]; //buffer for parsing vtg packets (velocity packets)
+static uint8_t uart_buffer[GPS_UART_BUFFER_SIZE]; //buffer for parsing vtg packets (velocity packets)
+static uint8_t a[GPS_UART_BUFFER_SIZE];
 
-static void parseGGA(char* data);
-static void parseVTG(char* data);
+static void parseGGA(uint8_t* data);
+static void parseVTG(uint8_t* data);
 
 static char byteToHexString(unsigned int checkSumHalf) {
     char charOut = 0;
@@ -114,7 +115,7 @@ static char asciiToHex(unsigned char asciiSymbol) {
  * @param string
  * @return True if string is a valid gps string, false otherwise
  */
-static bool isNMEAChecksumValid(char* string){
+static bool isNMEAChecksumValid(uint8_t* string){
     uint16_t i = 0;
     uint8_t checksum = 0;
 
@@ -136,11 +137,6 @@ void parseIncomingGPSData(){
 	static bool currently_parsing = false;
 	static uint16_t buffer_index = 0;
 	int b = 0;
-
-	uint8_t a[GPS_UART_BUFFER_SIZE] = {0};
-
-	HAL_UART_Receive(&huart4, a, GPS_UART_BUFFER_SIZE, 5000);
-	HAL_Delay(100);
 
 	for (int i = 0; i < GPS_UART_BUFFER_SIZE; i++) {
 		if (a[i] == '$') { //Beginning of Packet
@@ -190,54 +186,39 @@ void parseIncomingGPSData(){
         } else {
 //            debug("Failed checksum when parsing a GPVTG (velocity) packet!");
 //            debug(vtg_buffer);
-         }
+        }
     }
-
-
 }
 
 void init() {
 
 	const uint8_t CFG_NMEA[16] = { 0x17, 0x20, 0b00011000, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00, 0b01110110, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00 };
 	HAL_UART_Transmit(&huart4, CFG_NMEA, sizeof(CFG_NMEA), 5000);
-	HAL_Delay(300);
+	HAL_Delay(100);
 
 	HAL_UART_Transmit(&huart4, PUBX_CONFIG_NMEA, sizeof(PUBX_CONFIG_NMEA), 5000);
-	HAL_Delay(300);
-
-	HAL_UART_Transmit(&huart4, PUBX_SET_GGA, sizeof(PUBX_SET_GGA), 5000);
-	HAL_Delay(300);
-
-	HAL_UART_Transmit(&huart4, PUBX_SET_VTG, sizeof(PUBX_SET_VTG), 5000);
-	HAL_Delay(300);
-
-	HAL_UART_Transmit(&huart4, PUBX_SET_RMC_OFF, sizeof(PUBX_SET_RMC_OFF), 5000);
-	HAL_Delay(300);
-
-	HAL_UART_Transmit(&huart4, PUBX_SET_GSA_OFF, sizeof(PUBX_SET_GSA_OFF), 5000);
-	HAL_Delay(300);
-
-	HAL_UART_Transmit(&huart4, PUBX_SET_GLL_OFF, sizeof(PUBX_SET_GLL_OFF), 5000);
-	HAL_Delay(300);
-
-	HAL_UART_Transmit(&huart4, PUBX_SET_GNS_OFF, sizeof(PUBX_SET_GNS_OFF), 5000);
-	HAL_Delay(300);
-
-//	HAL_UART_Transmit(&huart4, PMTK_SET_NMEA_OUTPUT_GGAVTG, sizeof(PMTK_SET_NMEA_OUTPUT_GGAVTG), 5000);
-//	HAL_Delay(300);
+	HAL_Delay(100);
 
 	HAL_UART_Transmit(&huart4, PMTK_SET_NMEA_UPDATE_10HZ, sizeof(PMTK_SET_NMEA_UPDATE_10HZ), 5000);
-	HAL_Delay(300);
+	HAL_Delay(100);
 
 	HAL_UART_Transmit(&huart4, PMTK_API_SET_FIX_CTL_5HZ, sizeof(PMTK_API_SET_FIX_CTL_5HZ), 5000);
-	HAL_Delay(300);
+	HAL_Delay(100);
 
 	HAL_UART_Transmit(&huart4, PMTK_ENABLE_WAAS, sizeof(PMTK_ENABLE_WAAS), 5000);
-	HAL_Delay(300);
+	HAL_Delay(100);
 
 	configured = true;
+
+	HAL_UART_Receive_DMA(&huart4, a, GPS_UART_BUFFER_SIZE);
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+
+	parseIncomingGPSData();
+
+	HAL_UART_Receive_DMA(&huart4, a, GPS_UART_BUFFER_SIZE);
+}
 
 bool isNewDataAvailable(){
     if (data_available){
@@ -247,7 +228,7 @@ bool isNewDataAvailable(){
     return false;
 }
 
-static void parseVTG(char* data){
+static void parseVTG(uint8_t* data){
 
     //static so that we dont allocate these variables every time
     static char rawHeading[6] = {0, 0, 0, 0, 0, 0};
@@ -322,8 +303,6 @@ static void parseVTG(char* data){
         decimalPoint--;
     }
     gps_data.groundSpeed = gps_data.groundSpeed / multiplier;
-
-    HAL_Delay(100);
 }
 
 /**
@@ -331,7 +310,7 @@ static void parseVTG(char* data){
  * fields
  * @param data
  */
-static void parseGGA(char* data){
+static void parseGGA(uint8_t* data){
 
     int comma = 0; //comma counting so that we know what header we're parsing for
     int i = 0; //index for the current position of the field value
@@ -457,7 +436,5 @@ static void parseGGA(char* data){
         decimalPoint--;
     }
     gps_data.altitude = (int)(tAltitude / multiplier);
-
-    HAL_Delay(100);
 }
 
