@@ -45,6 +45,7 @@
 
 UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
+DMA_HandleTypeDef hdma_uart4_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -107,11 +108,13 @@ int main(void)
   while (1)
   {
 	  if (isNewDataAvailable()) {
+		  HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_1);
 		  gpsdata = getData();
-	  }
 
-	  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
-	  HAL_Delay(100);
+		  if (gpsdata.ggaDataIsNew && gpsdata.vtgDataIsNew) {
+			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
+		  }
+	  }
 
     /* USER CODE END WHILE */
 
@@ -216,6 +219,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
+  /* DMA1_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
 }
 

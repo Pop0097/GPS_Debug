@@ -12,60 +12,60 @@
 #define GPS_UART_INTERFACE 1
 
 /** Baudrate the gps communicates over by default */
-#define GPS_UART_BAUDRATE 9600
+#define GPS_UART_BAUDRATE 38400
 
 /** How large to make the internal buffer for parsing messages. Should be the size
  of the largest message we'll receive from the gps*/
-#define GPS_UART_BUFFER_SIZE 1000
+#define GPS_UART_BUFFER_SIZE 800
 
 // different commands to set the update rate from once a second (1 Hz) to 10 times a second (10Hz)
 // Note that these only control the rate at which the position is echoed, to actually speed up the
 // position fix you must also send one of the position fix rate commands below too.
-static const char* PMTK_SET_NMEA_UPDATE_1HZ = "$PMTK220,1000*1F\r\n";
-static const char* PMTK_SET_NMEA_UPDATE_5HZ = "$PMTK220,200*2C\r\n";
-static const char* PMTK_SET_NMEA_UPDATE_10HZ = "$PMTK220,100*2F\r\n";
+static const uint8_t* PMTK_SET_NMEA_UPDATE_1HZ = "$PMTK220,1000*1F\r\n";
+static const uint8_t* PMTK_SET_NMEA_UPDATE_5HZ = "$PMTK220,200*2C\r\n";
+static const uint8_t* PMTK_SET_NMEA_UPDATE_10HZ = "$PMTK220,100*2F\r\n";
 
 // Position fix update rate commands.
-static const char* PMTK_API_SET_FIX_CTL_1HZ = "$PMTK100,1000,0,0,0,0*1C\r\n";
-static const char* PMTK_API_SET_FIX_CTL_5HZ = "$PMTK100,200,0,0,0,0*2F\r\n";
+static const uint8_t* PMTK_API_SET_FIX_CTL_1HZ = "$PMTK100,1000,0,0,0,0*1C\r\n";
+static const uint8_t* PMTK_API_SET_FIX_CTL_5HZ = "$PMTK100,200,0,0,0,0*2F\r\n";
 // Can't fix position faster than 5 times a second!
 
-static const char* PMTK_SET_BAUD_57600 = "$PMTK251,57600*2C\r\n";
-static const char* PMTK_SET_BAUD_9600 = "$PMTK251,9600*17\r\n";
+static const uint8_t* PMTK_SET_BAUD_57600 = "$PMTK251,57600*2C\r\n";
+static const uint8_t* PMTK_SET_BAUD_9600 = "$PMTK251,9600*17\r\n";
 
 //turn on VTG (velocity info) and GGA (positional info) only
-static const char* PMTK_SET_NMEA_OUTPUT_GGAVTG = "$PMTK314,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n";
+static const uint8_t* PMTK_SET_NMEA_OUTPUT_GGAVTG = "$PMTK314,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n";
 // turn on ALL THE DATA
-static const char* PMTK_SET_NMEA_OUTPUT_ALLDATA = "$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n";
+static const uint8_t* PMTK_SET_NMEA_OUTPUT_ALLDATA = "$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n";
 // turn off output
-static const char* PMTK_SET_NMEA_OUTPUT_OFF = "$PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n";
+static const uint8_t* PMTK_SET_NMEA_OUTPUT_OFF = "$PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n";
 
 // to generate your own sentences, check out the MTK command datasheet and use a checksum calculator
 // such as the awesome http://www.hhhh.org/wiml/proj/nmeaxor.html
 
 // one of the 2 DGPS modes
-static const char* PMTK_ENABLE_SBAS = "$PMTK313,1*2E\r\n";
-static const char* PMTK_ENABLE_WAAS = "$PMTK301,2*2E\r\n";
+static const uint8_t* PMTK_ENABLE_SBAS = "$PMTK313,1*2E\r\n";
+static const uint8_t* PMTK_ENABLE_WAAS = "$PMTK301,2*2E\r\n";
 
 // ask for the release and version
-static const char* PMTK_Q_RELEASE = "$PMTK605*31\r\n";
+static const uint8_t* PMTK_Q_RELEASE = "$PMTK605*31\r\n";
 
 // request for updates on antenna status
-static const char* PGCMD_ANTENNA = "$PGCMD,33,1*6C\r\n";
-static const char* PGCMD_NOANTENNA = "$PGCMD,33,0*6D\r\n";
+static const uint8_t* PGCMD_ANTENNA = "$PGCMD,33,1*6C\r\n";
+static const uint8_t* PGCMD_NOANTENNA = "$PGCMD,33,0*6D\r\n";
 
 // https://nmeachecksum.eqth.net --> get checksums
-static const char* PUBX_CONFIG_NMEA =  "$PUBX,41,1,07,03,9600,0*10\r\n"; //Change hex numbers later
-static const char* PUBX_SET_GGA = "$PUBX,40,GGA,0,1,0,0,0,0*5B\r\n";
-static const char* PUBX_SET_VTG = "$PUBX,40,VTG,0,1,0,0,0,0*5F\r\n";
-static const char* PUBX_SET_RMC_OFF = "$PUBX,40,RMC,0,0,0,0,0,0*47\r\n";
-static const char* PUBX_SET_GSA_OFF = "$PUBX,40,GSA,0,0,0,0,0,0*4A\r\n";
-static const char* PUBX_SET_GNS_OFF = "$PUBX,40,GNS,0,0,0,0,0,0*41\r\n";
-static const char* PUBX_SET_GLL_OFF = "$PUBX,40,GLL,0,0,0,0,0,0*5C\r\n";
-//static const char* PUBX_SET_GSA_OFF = "$PUBX,40,GSA,0,0,0,0,0,0*4A\r\n";
+//static const uint8_t* PUBX_CONFIG_NMEA =  "$PUBX,41,1,07,03,38400,0*20\r\n"; //Change hex numbers later
+static const uint8_t* PUBX_CONFIG_NMEA =  "$PUBX,41,1,07,03,9600,0*10\r\n"; //Change hex numbers later
+static const uint8_t* PUBX_SET_GGA = "$PUBX,40,GGA,0,1,0,0,0,0*5B\r\n";
+static const uint8_t* PUBX_SET_VTG = "$PUBX,40,VTG,0,1,0,0,0,0*5F\r\n";
+static const uint8_t* PUBX_SET_RMC_OFF = "$PUBX,40,RMC,0,0,0,0,0,0*47\r\n";
+static const uint8_t* PUBX_SET_GSA_OFF = "$PUBX,40,GSA,0,0,0,0,0,0*4A\r\n";
+static const uint8_t* PUBX_SET_GNS_OFF = "$PUBX,40,GNS,0,0,0,0,0,0*41\r\n";
+static const uint8_t* PUBX_SET_GLL_OFF = "$PUBX,40,GLL,0,0,0,0,0,0*5C\r\n";
 
-#define GPS_GGA_MESSAGE "GNGGA"
-#define GPS_VTG_MESSAGE "GNVTG"
+static const uint8_t* GPS_GGA_MESSAGE = "GNGGA";
+static const uint8_t* GPS_VTG_MESSAGE = "GNVTG";
 
 GPSData gps_data;
 
@@ -84,20 +84,20 @@ static uint8_t a[GPS_UART_BUFFER_SIZE];
 static void parseGGA(uint8_t* data);
 static void parseVTG(uint8_t* data);
 
-static char byteToHexString(unsigned int checkSumHalf) {
-    char charOut = 0;
+static uint8_t byteToHexString(unsigned int checkSumHalf) {
+    uint8_t uint8_tOut = 0;
 
     if (checkSumHalf >= 0 && checkSumHalf <= 9){
-        charOut = checkSumHalf + 0x30;
+        uint8_tOut = checkSumHalf + 0x30;
     }
     else if (checkSumHalf >= 0xA && checkSumHalf <= 0xF){
-        charOut = checkSumHalf + 0x37;
+        uint8_tOut = checkSumHalf + 0x37;
     }
-    return charOut;
+    return uint8_tOut;
 }
 
-static char asciiToHex(unsigned char asciiSymbol) {
-    char hexOut = 0;
+static uint8_t asciiToHex(uint8_t asciiSymbol) {
+    uint8_t hexOut = 0;
     if (asciiSymbol == 0x2E)
         hexOut = 0x10;
     else if (asciiSymbol >= 0x30 && asciiSymbol <= 0x39){
@@ -129,7 +129,14 @@ static bool isNMEAChecksumValid(uint8_t* string){
 }
 
 GPSData getData() {
-	return gps_data;
+
+	GPSData toReturn = gps_data;
+	gps_data.ggaDataIsNew = false;
+	gps_data.vtgDataIsNew = false;
+	gps_data.dataIsNew = false;
+	gps_data.timeIsNew = false;
+
+	return toReturn;
 }
 
 void parseIncomingGPSData(){
@@ -137,6 +144,7 @@ void parseIncomingGPSData(){
 	static bool currently_parsing = false;
 	static uint16_t buffer_index = 0;
 	int b = 0;
+	int c = 0;
 
 	for (int i = 0; i < GPS_UART_BUFFER_SIZE; i++) {
 		if (a[i] == '$') { //Beginning of Packet
@@ -150,7 +158,7 @@ void parseIncomingGPSData(){
 			 } else if (strncmp(GPS_VTG_MESSAGE, uart_buffer, 5) == 0){
 				memcpy(vtg_buffer, uart_buffer, GPS_UART_BUFFER_SIZE);
 				new_vtg_data = true;
-				b += 20;
+				c += 20;
 			 } else {
 //				 debug("Received NMEA that was neither GPVTG or GPGGA!");
 			 }
@@ -171,7 +179,12 @@ void parseIncomingGPSData(){
             data_available = false;
             parseGGA(gga_buffer);
             data_available = true;
+            gps_data.dataIsNew = true;
+            gps_data.timeIsNew = true;
+            gps_data.ggaDataIsNew = true;
+            gps_data.sensorStatus = 0;
         } else {
+        	gps_data.sensorStatus = 1;
 //            debug("Failed checksum when parsing a GPGGA (positional) packet!");
 //            debug(gga_buffer);
         }
@@ -183,7 +196,11 @@ void parseIncomingGPSData(){
             data_available = false;
             parseVTG(vtg_buffer);
             data_available = true;
+            gps_data.dataIsNew = true;
+            gps_data.sensorStatus = 0;
+            gps_data.vtgDataIsNew = true;
         } else {
+        	gps_data.sensorStatus = 1;
 //            debug("Failed checksum when parsing a GPVTG (velocity) packet!");
 //            debug(vtg_buffer);
         }
@@ -193,20 +210,18 @@ void parseIncomingGPSData(){
 void init() {
 
 	const uint8_t CFG_NMEA[16] = { 0x17, 0x20, 0b00011000, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00, 0b01110110, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00 };
-	HAL_UART_Transmit(&huart4, CFG_NMEA, sizeof(CFG_NMEA), 5000);
-	HAL_Delay(100);
+	HAL_UART_Transmit_DMA(&huart4, CFG_NMEA, sizeof(CFG_NMEA));
 
-	HAL_UART_Transmit(&huart4, PUBX_CONFIG_NMEA, sizeof(PUBX_CONFIG_NMEA), 5000);
-	HAL_Delay(100);
+//	HAL_UART_Transmit_DMA(&huart4, PUBX_CONFIG_NMEA, sizeof(PUBX_CONFIG_NMEA));
 
-	HAL_UART_Transmit(&huart4, PMTK_SET_NMEA_UPDATE_10HZ, sizeof(PMTK_SET_NMEA_UPDATE_10HZ), 5000);
-	HAL_Delay(100);
+//	const uint8_t CFG_UART[21] = { 0x06, 0x00, 0x01, 0x00, 0b00000000, 0b00000000, 0x00, 0x00, 0b11000000, 0b00001000, 0x00, 0x01, 0b11000010, 0x00, 0x00, 0b00000010, 0x00, 0b00000010, 0x00, 0x00, 0x00 };
+//	HAL_UART_Transmit_DMA(&huart4, CFG_UART, sizeof(CFG_UART));
 
-	HAL_UART_Transmit(&huart4, PMTK_API_SET_FIX_CTL_5HZ, sizeof(PMTK_API_SET_FIX_CTL_5HZ), 5000);
-	HAL_Delay(100);
+	HAL_UART_Transmit_DMA(&huart4, PMTK_SET_NMEA_UPDATE_10HZ, sizeof(PMTK_SET_NMEA_UPDATE_10HZ));
 
-	HAL_UART_Transmit(&huart4, PMTK_ENABLE_WAAS, sizeof(PMTK_ENABLE_WAAS), 5000);
-	HAL_Delay(100);
+	HAL_UART_Transmit_DMA(&huart4, PMTK_API_SET_FIX_CTL_5HZ, sizeof(PMTK_API_SET_FIX_CTL_5HZ));
+
+	HAL_UART_Transmit_DMA(&huart4, PMTK_ENABLE_WAAS, sizeof(PMTK_ENABLE_WAAS));
 
 	configured = true;
 
@@ -231,15 +246,15 @@ bool isNewDataAvailable(){
 static void parseVTG(uint8_t* data){
 
     //static so that we dont allocate these variables every time
-    static char rawHeading[6] = {0, 0, 0, 0, 0, 0};
-    static char rawGroundSpeed[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t rawHeading[6] = {0, 0, 0, 0, 0, 0};
+    static uint8_t rawGroundSpeed[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     int comma = 0;
     int i = 0;
     int j = 0;
 
     while (data[j] != '*') {
-        char numData = asciiToHex(data[j]);
+        uint8_t numData = asciiToHex(data[j]);
         if (data[j] == ',') {
             comma++;
             i = 0;
@@ -314,20 +329,20 @@ static void parseGGA(uint8_t* data){
 
     int comma = 0; //comma counting so that we know what header we're parsing for
     int i = 0; //index for the current position of the field value
-    int j = 0; //7th character is where data will start. index for the byte index in the counter
+    int j = 0; //7th uint8_tacter is where data will start. index for the byte index in the counter
 
     //statically initialize placeholders for values. Static to avoid reinitializations every time
-    static char rawTime[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    static char rawLatitude[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    static char rawLongitude[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    static char rawSatellites[3] = {0, 0, 10};
-    static char rawAltitude[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    static char latitudeNS = 0;
-    static char longitudeEW = 0;
-    static char positionFix = 0;
+    static uint8_t rawTime[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t rawLatitude[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t rawLongitude[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t rawSatellites[3] = {0, 0, 10};
+    static uint8_t rawAltitude[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t latitudeNS = 0;
+    static uint8_t longitudeEW = 0;
+    static uint8_t positionFix = 0;
 
     while (data[j] != '*') {
-        char numData = asciiToHex(data[j]);
+        uint8_t numData = asciiToHex(data[j]);
 
         if (data[j] == ',') {
             comma++;
