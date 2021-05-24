@@ -18,7 +18,6 @@
  of the largest message we'll receive from the gps*/
 #define GPS_UART_BUFFER_SIZE 800
 
-
 #define NEO_M8 0
 
 struct GpsData_t{

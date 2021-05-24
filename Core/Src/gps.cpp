@@ -160,15 +160,20 @@ void NEOM8::parse_gpsData() {
 			buffer_index = 0;
 		} else if (byte_collection_buffer[i] == '\r') { //End of Packet
 			 if (strncmp((char*) GPS_GGA_MESSAGE, (char*) uart_buffer, 5) == 0){
-				 memcpy(gga_buffer, uart_buffer, GPS_UART_BUFFER_SIZE);
-				 gpsData.ggaDataIsNew = true;
-				 b += 10;
+				memcpy(gga_buffer, uart_buffer, GPS_UART_BUFFER_SIZE);
+				gpsData.ggaDataIsNew = true;
+				b += 10;
 			 } else if (strncmp((char*) GPS_VTG_MESSAGE, (char*) uart_buffer, 5) == 0){
 				memcpy(vtg_buffer, uart_buffer, GPS_UART_BUFFER_SIZE);
 				gpsData.vtgDataIsNew = true;
 				c += 20;
 			 }
 			 currently_parsing = false;
+
+			 // Exit if we find both of the messages to not waste time on computation
+			 if (gpsData.ggaDataIsNew && gpsData.vtgDataIsNew) {
+				 break;
+			 }
 		} else if (currently_parsing){
 			uart_buffer[buffer_index] = byte_collection_buffer[i];
 			buffer_index = (buffer_index + 1) % GPS_UART_BUFFER_SIZE; //make sure we dont cause a segmentation fault here

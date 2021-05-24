@@ -114,9 +114,11 @@ int main(void)
 
 	gps->GetResult(&gpsdata);
 
-	if (gpsdata.dataIsNew) {
+	if (gpsdata.ggaDataIsNew && gpsdata.vtgDataIsNew) {
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
 		gpsdata.dataIsNew = false;
+		gpsdata.ggaDataIsNew = false;
+		gpsdata.vtgDataIsNew = false;
 	}
 
 
