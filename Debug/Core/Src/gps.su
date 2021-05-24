@@ -1,10 +1,13 @@
-gps.c:87:16:byteToHexString	24	static
-gps.c:99:16:asciiToHex	24	static
-gps.c:118:13:isNMEAChecksumValid	24	static
-gps.c:131:9:getData	64	static
-gps.c:142:6:parseIncomingGPSData	24	static
-gps.c:210:6:init	32	static
-gps.c:231:6:HAL_UART_RxCpltCallback	16	static
-gps.c:238:6:isNewDataAvailable	4	static
-gps.c:246:13:parseVTG	48	static
-gps.c:328:13:parseGGA	48	static
+gps.hpp:71:8:virtual void NEOM8::BeginMeasuring()	16	static
+gps.cpp:66:8:static NEOM8* NEOM8::GetInstance()	16	static
+gps.hpp:44:7:constexpr Gps::Gps()	16	static
+gps.cpp:74:1:NEOM8::NEOM8()	16	static
+gps.cpp:100:6:void HAL_UART_RxCpltCallback(UART_HandleTypeDef*)	24	static
+gps.cpp:108:10:uint8_t* NEOM8::get_byte_collection_buffer()	16	static
+gps.cpp:113:6:bool NEOM8::is_check_sum_valid(uint8_t*)	24	static
+gps.cpp:126:9:uint8_t NEOM8::uint8_to_hex(unsigned int)	24	static
+gps.cpp:138:9:uint8_t NEOM8::ascii_to_hex(uint8_t)	24	static
+gps.cpp:151:6:void NEOM8::parse_gpsData()	32	static
+gps.cpp:212:6:void NEOM8::parse_vtg(uint8_t*)	48	static
+gps.cpp:288:6:void NEOM8::parse_gga(uint8_t*)	48	static
+gps.cpp:415:6:virtual void NEOM8::GetResult(GpsData_t*)	16	static

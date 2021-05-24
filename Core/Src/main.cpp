@@ -18,12 +18,12 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <gps.hpp>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "gps.h"
 
 /* USER CODE END Includes */
 
@@ -97,9 +97,13 @@ int main(void)
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
-  init();
 
-  GPSData gpsdata;
+  NEOM8 * gps = NEOM8::GetInstance();
+
+  GpsData_t gpsdata;
+  gpsdata.dataIsNew = false;
+
+  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
 
   /* USER CODE END 2 */
 
@@ -107,14 +111,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if (isNewDataAvailable()) {
-		  HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_1);
-		  gpsdata = getData();
 
-		  if (gpsdata.ggaDataIsNew && gpsdata.vtgDataIsNew) {
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
-		  }
-	  }
+	gps->GetResult(&gpsdata);
+
+	if (gpsdata.dataIsNew) {
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
+		gpsdata.dataIsNew = false;
+	}
+
 
     /* USER CODE END WHILE */
 
