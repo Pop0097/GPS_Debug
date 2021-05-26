@@ -1,15 +1,18 @@
 /*
- * gps.c
+ *  Author: Dhruv Rawat
  *
- *  Created on: May 20, 2021
- *      Author: dhruv
+ *  This code controls our GPS sensor and ensures we get samples at around 1 Hz.
+ *
+ *  Future development:
+ *      - Configure GPS to increase baud rate from 9600 and reduce the amount of NMEA messages sent to just GGA and VTG
+ *      - Make the GGA and VTG messages use GP instead of GN
+ *
+ *  Parsing algorithms taken from the custom WARG PicPilot software.
  */
 
 #include <gps.hpp>
 #include <cstring>
 #include "stm32f7xx_hal.h"
-
-
 
 // different commands to set the update rate from once a second (1 Hz) to 10 times a second (10Hz)
 // Note that these only control the rate at which the position is echoed, to actually speed up the
@@ -73,7 +76,8 @@ NEOM8* NEOM8::GetInstance() {
 
 NEOM8::NEOM8() : gpsData {},
 				 configured {false},
-				 dataAvailable {false} {
+				 dataAvailable {false},
+				 newData {false} {
 
 //	const uint8_t CFG_NMEA[16] = { 0x17, 0x20, 0b00011000, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00, 0b01110110, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00 };
 //	HAL_UART_Transmit_DMA(&huart4, (uint8_t*) CFG_NMEA, sizeof(CFG_NMEA));
@@ -100,7 +104,9 @@ NEOM8::NEOM8() : gpsData {},
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	NEOM8 * neoM8N = NEOM8::GetInstance();
 
-	neoM8N->parse_gpsData();
+	neoM8N->newData = true;
+
+//	neoM8N->parse_gpsData();
 
 	HAL_UART_Receive_DMA(&huart4, neoM8N->get_byte_collection_buffer(), GPS_UART_BUFFER_SIZE);
 }
@@ -418,6 +424,12 @@ void NEOM8::parse_gga(uint8_t* data) {
 }
 
 void NEOM8::GetResult(GpsData_t * Data) {
+
+	if (newData) {
+		parse_gpsData();
+		newData = false;
+	}
+
 	if (dataAvailable) {
 		Data->dataIsNew = gpsData.dataIsNew;
 		Data->ggaDataIsNew = gpsData.ggaDataIsNew;
