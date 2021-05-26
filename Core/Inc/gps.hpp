@@ -84,8 +84,9 @@ class NEOM8 : public Gps
 		 */
 		void parse_gpsData();
 
-		bool newData;
+		void copy_buffer(uint8_t * buffer);
 
+		void set_new_data(bool val);
 
 	private:
 		//Constructor
@@ -99,6 +100,8 @@ class NEOM8 : public Gps
 		uint8_t vtg_buffer[GPS_UART_BUFFER_SIZE]; //buffer for parsing vtg packets (velocity packets)
 		uint8_t uart_buffer[GPS_UART_BUFFER_SIZE]; //buffer for parsing vtg packets (velocity packets)
 		uint8_t byte_collection_buffer[GPS_UART_BUFFER_SIZE];
+		uint8_t parsing_buffer[GPS_UART_BUFFER_SIZE];
+		bool newData;
 
 		bool dataAvailable;
 		bool configured; //if the gps module has been initialized and configured
