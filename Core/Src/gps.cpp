@@ -76,8 +76,7 @@ NEOM8* NEOM8::GetInstance() {
 
 NEOM8::NEOM8() : gpsData {},
 				 configured {false},
-				 dataAvailable {false},
-				 newData {false} {
+				 dataAvailable {false} {
 
 //	const uint8_t CFG_NMEA[16] = { 0x17, 0x20, 0b00011000, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00, 0b01110110, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00 };
 //	HAL_UART_Transmit_DMA(&huart4, (uint8_t*) CFG_NMEA, sizeof(CFG_NMEA));
@@ -104,24 +103,18 @@ NEOM8::NEOM8() : gpsData {},
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	NEOM8 * neoM8N = NEOM8::GetInstance();
 
-	neoM8N->copy_buffer(neoM8N->get_byte_collection_buffer());
-	neoM8N->set_new_data(true);
+//	neoM8N->copy_buffer(neoM8N->get_byte_collection_buffer());
 
 	HAL_UART_Receive_DMA(&huart4, neoM8N->get_byte_collection_buffer(), GPS_UART_BUFFER_SIZE);
 }
 
 void NEOM8::copy_buffer(uint8_t * buffer) {
-	memcpy(parsing_buffer, buffer, GPS_UART_BUFFER_SIZE);
+	memcpy(byte_collection_buffer, buffer, GPS_UART_BUFFER_SIZE);
 }
 
 uint8_t* NEOM8::get_byte_collection_buffer() {
 	return byte_collection_buffer;
 }
-
-void NEOM8::set_new_data(bool val) {
-	newData = val;
-}
-
 
 bool NEOM8::is_check_sum_valid(uint8_t* string){
     uint16_t i = 0;
@@ -164,22 +157,18 @@ uint8_t NEOM8::ascii_to_hex(uint8_t asciiSymbol) {
 void NEOM8::parse_gpsData() {
 	static bool currently_parsing = false;
 	static uint16_t buffer_index = 0;
-	int b = 0;
-	int c = 0;
 
 	for (int i = 0; i < GPS_UART_BUFFER_SIZE; i++) {
-		if (parsing_buffer[i] == '$') { //Beginning of Packet
+		if (byte_collection_buffer[i] == '$') { //Beginning of Packet
 			currently_parsing = true;
 			buffer_index = 0;
-		} else if (parsing_buffer[i] == '\r') { //End of Packet
+		} else if (byte_collection_buffer[i] == '\r') { //End of Packet
 			 if (strncmp((char*) GPS_GGA_MESSAGE, (char*) uart_buffer, 5) == 0){
 				memcpy(gga_buffer, uart_buffer, GPS_UART_BUFFER_SIZE);
 				gpsData.ggaDataIsNew = true;
-				b += 10;
 			 } else if (strncmp((char*) GPS_VTG_MESSAGE, (char*) uart_buffer, 5) == 0){
 				memcpy(vtg_buffer, uart_buffer, GPS_UART_BUFFER_SIZE);
 				gpsData.vtgDataIsNew = true;
-				c += 20;
 			 }
 			 currently_parsing = false;
 
@@ -188,7 +177,7 @@ void NEOM8::parse_gpsData() {
 				 break;
 			 }
 		} else if (currently_parsing){
-			uart_buffer[buffer_index] = parsing_buffer[i];
+			uart_buffer[buffer_index] = byte_collection_buffer[i];
 			buffer_index = (buffer_index + 1) % GPS_UART_BUFFER_SIZE; //make sure we dont cause a segmentation fault here
 		}
 	}
@@ -432,10 +421,7 @@ void NEOM8::parse_gga(uint8_t* data) {
 
 void NEOM8::GetResult(GpsData_t * Data) {
 
-	if (newData) {
-		parse_gpsData();
-		newData = false;
-	}
+	parse_gpsData();
 
 	if (dataAvailable) {
 		Data->dataIsNew = gpsData.dataIsNew;
