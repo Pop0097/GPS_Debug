@@ -1,4 +1,4 @@
-# WARG_GPS_Debug
+# GPS_Driver
 
 Code used to develop and debug the GPS driver for the WARG custom autopilot: ZeroPilot.
 
