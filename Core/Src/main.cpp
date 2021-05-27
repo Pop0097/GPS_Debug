@@ -102,6 +102,8 @@ int main(void)
 
   GpsData_t gpsdata;
   gpsdata.dataIsNew = false;
+  gpsdata.ggaDataIsNew = false;
+  gpsdata.vtgDataIsNew = false;
 
   HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_7);
 
